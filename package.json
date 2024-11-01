@@ -1,0 +1,58 @@
+{
+  "name": "@anhtuvu24/verifycomp",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "version": "1.0.1",
+  "description": "verify component",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "files": [
+    "dist"
+  ],
+  "types": "dist/types.d.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:declarations": "tsc",
+    "build": "npm run build:declarations && rollup -c --bundleConfigAsCjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anhtuvu24/verifyComp.git"
+  },
+  "keywords": [
+    "394229"
+  ],
+  "author": "anhtu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/anhtuvu24/verifyComp/issues"
+  },
+  "homepage": "https://github.com/anhtuvu24/verifyComp#readme",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.1",
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.1",
+    "@types/node": "^22.8.5",
+    "@types/react": "^18.3.12",
+    "antd": "^5.21.6",
+    "react": "^18.3.1",
+    "react-router-dom": "^6.27.0",
+    "rollup": "^4.24.3",
+    "rollup-plugin-dts": "^6.1.1",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-postcss": "^4.0.2",
+    "rollup-plugin-sass": "^1.14.0",
+    "sass": "^1.80.5",
+    "styled-components": "^6.1.13",
+    "typescript": "^5.6.3",
+    "use-query-params": "^2.2.1"
+  },
+  "dependencies": {
+    "moment": "^2.30.1",
+    "react-icons": "^5.3.0",
+    "react-scroll": "^1.9.0"
+  }
+}

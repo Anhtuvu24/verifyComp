@@ -1,0 +1,1 @@
+export { default as VerifySubmissionData } from './VerifySubmissionData'
