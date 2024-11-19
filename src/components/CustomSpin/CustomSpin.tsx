@@ -3,13 +3,13 @@ import { Spin } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 
 interface CustomSpinProps {
-    size: number;
-    children: ReactNode;
-    spinning: boolean;
+    size?: number;
+    children?: ReactNode;
+    spinning?: boolean;
     style?: CSSProperties;
 }
 
-const CustomSpin: React.FC<CustomSpinProps> = ({ size, children, spinning, style }) => {
+const CustomSpin: React.FC<CustomSpinProps> = ({ size = 14, children, spinning = true, style }) => {
     return (
         <Spin
             spinning={spinning}

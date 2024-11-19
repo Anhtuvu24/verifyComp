@@ -1,29 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import { Input, Form } from 'antd';
-
-// Components
+import React, { useEffect, useState } from 'react';
+import { Form, Select } from 'antd';
+import { CaretDownOutlined } from '@ant-design/icons';
 
 // Styles
-import { CellDatapoint } from "./index.styles";
+import { CellDatapoint } from './index.styles';
 
 // Utils
-import { formatVND } from "../../utils/format";
 import useGetIndex from "../../utils/useGetIndex";
 
-interface CellItemProps {
+const { Option } = Select;
+const style = {
+    fontSize: 16,
+    verticalAlign: 'middle',
+};
+
+// const statusIconOptions = {
+//     for_review: <IoMdCheckmark style={{ ...style, color: 'rgba(0,0,0,0.1)' }} />,
+//     for_verify: <IoMdCheckmark style={{ ...style, color: '#00B497', transition: 'all 0.1s' }} />,
+//     verified: <IoMdCheckmark style={{ ...style, color: '#00B497' }} />,
+//     rejected: <FcCancel style={style} />,
+//     undefined: <IoMdCheckmark style={{ ...style, color: 'transparent' }} />,
+// };
+
+interface GenderCellItemProps {
     datapoint: any;
+    activeFieldData: any;
     inputCellRefs: any;
     isReadOnly: boolean;
     flatData: any;
     onFocusCell: (document_id: string, datapoint_id: string, data: any) => void;
-    onKeyDownCell: (e: React.KeyboardEvent, document_id: string, datapoint_id: string, index: number) => void;
+    onKeyDownCell: (e: React.KeyboardEvent, document_id: string, datapoint_id: string, index: number, nextIndex: number | undefined) => void;
     onMouseDownCell: (datapoint_id: string) => void;
     debounced: (field_data_id: string, value: string) => void;
     onChangeFieldDataValue: (datapointId: string, value: any) => void;
 }
 
-const CellItem: React.FC<CellItemProps> = ({
+const GenderCellItem: React.FC<GenderCellItemProps> = ({
     datapoint: field_data,
+    activeFieldData,
     inputCellRefs,
     isReadOnly,
     flatData,
@@ -33,7 +47,6 @@ const CellItem: React.FC<CellItemProps> = ({
     debounced,
     onChangeFieldDataValue,
 }) => {
-    // const dispatch = useDispatch();
     const [form] = Form.useForm();
 
     const { id: field_data_id, submission_field, value, data: selected_id, data_source } = field_data;
@@ -42,14 +55,15 @@ const CellItem: React.FC<CellItemProps> = ({
     const [selectedData, setSelectedData] = useState(data_source?.find((data: any) => data.id === selected_id));
     const { id: datapoint_id, document: document_id, confidence_score, status } = selectedData || {};
 
-    const [index] = useGetIndex(flatData, field_data_id, 'not_validated');
+    const [index, nextIndex] = useGetIndex(flatData, field_data_id, 'not_validated');
     const datapointRef = inputCellRefs[index];
 
     const fieldDataValue = value;
+    const active_field_data_id = activeFieldData?.field_data_id;
 
     useEffect(() => {
         form.setFieldsValue({
-            [field_data_id]: isNumberField ? formatVND(value) : value,
+            [field_data_id]: value,
         });
     }, [field_data_id, submission_field, value, form]);
 
@@ -61,7 +75,7 @@ const CellItem: React.FC<CellItemProps> = ({
     }, [fieldDataValue, field_data_id, form]);
 
     const onKeyDown = (e: React.KeyboardEvent) => {
-        onKeyDownCell(e, document_id, datapoint_id, index);
+        onKeyDownCell(e, document_id, datapoint_id, index, nextIndex);
     };
 
     const onMouseDown = (e: React.MouseEvent) => {
@@ -80,53 +94,41 @@ const CellItem: React.FC<CellItemProps> = ({
         });
     };
 
-    const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { value } = e.target;
+    const onChange = (value: string) => {
         // dispatch(changeFieldDataValue(field_data_id, value));
         onChangeFieldDataValue(field_data_id, value)
         debounced(field_data_id, value);
-    };
-
-    const onChangeNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { value } = e.target;
-        const formatted = formatVND(value);
-        form.setFieldsValue({ [field_data_id]: formatted });
-        // dispatch(changeFieldDataValue(field_data_id, formatted));
-        onChangeFieldDataValue(field_data_id, formatted)
-        debounced(field_data_id, formatted.replaceAll('.', ''));
-    };
-
-    const onBlur = () => {
-        if (isNumberField) {
-            const value = form.getFieldValue(field_data_id);
-            if (value && value.charAt(value.length - 1) === ',') {
-                const valueTemp = value.slice(0, -1);
-                form.setFieldsValue({ [field_data_id]: valueTemp });
-                // dispatch(changeFieldDataValue(field_data_id, valueTemp));
-                onChangeFieldDataValue(field_data_id, valueTemp)
-                debounced(field_data_id, valueTemp.replaceAll('.', ''));
-            }
-        }
     };
 
     return (
         <CellDatapoint>
             <Form form={form} component={false}>
                 <Form.Item name={field_data_id} style={{ marginBottom: 0, flex: 1 }}>
-                    <Input
-                        onChange={isNumberField ? onChangeNumber : onChange}
+                    <Select
+                        onChange={onChange}
                         ref={datapointRef}
-                        onKeyDown={onKeyDown}
-                        readOnly={isReadOnly}
                         onMouseDown={onMouseDown}
                         onFocus={onFocus}
-                        onBlur={onBlur}
+                        onKeyDown={onKeyDown}
+                        open={!isReadOnly && undefined}
                         style={{
-                            padding: '4px 17px 4px 4px',
+                            padding: '0',
                             borderRadius: 0,
                             boxShadow: 'none',
+                            outline: 'none',
                         }}
-                    />
+                        suffixIcon={<CaretDownOutlined />}
+                    >
+                        <Option value={'Nam'} style={{ fontSize: 12 }}>
+                            Nam
+                        </Option>
+                        <Option value={'Nữ'} style={{ fontSize: 12 }}>
+                            Nữ
+                        </Option>
+                        <Option value={'Khác'} style={{ fontSize: 12 }}>
+                            Khác
+                        </Option>
+                    </Select>
                 </Form.Item>
             </Form>
             {/*<div style={{ position: 'absolute', right: '1px' }}>{statusIconOptions[syncStatus || status]}</div>*/}
@@ -134,4 +136,4 @@ const CellItem: React.FC<CellItemProps> = ({
     );
 };
 
-export default React.memo(CellItem);
+export default React.memo(GenderCellItem);

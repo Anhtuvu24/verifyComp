@@ -7,7 +7,6 @@ import useGetIndex from '../../utils/useGetIndex'
 import moment from 'moment'
 import 'moment/locale/vi'
 import locale from 'antd/es/date-picker/locale/vi_VN'
-import type { PickerRef } from 'rc-picker';
 
 const style = {
     fontSize: 16,
@@ -24,6 +23,7 @@ const statusIconOptions = {
 
 interface DobCellItemProps {
     datapoint: any; // Replace 'any' with the specific type if known
+    fieldDataValues: any;
     inputCellRefs: RefObject<HTMLElement>[];
     isReadOnly: boolean;
     flatData: any;
@@ -36,6 +36,7 @@ interface DobCellItemProps {
 
 const DobCellItem: React.FC<DobCellItemProps> = ({
     datapoint: field_data,
+    fieldDataValues,
     inputCellRefs,
     isReadOnly,
     flatData,
@@ -55,11 +56,11 @@ const DobCellItem: React.FC<DobCellItemProps> = ({
     const { id: datapoint_id, document: document_id, confidence_score, status } = selectedData || {}
 
     const [index, nextIndex] = useGetIndex(flatData, field_data_id, 'not_validated')
-    const datapointRef =  useRef(null);
+    const datapointRef = useRef(null);
 
     // const syncStatus = useSelector(state => state.docbase.entities.datapoint.all[datapoint_id]?.status)
     // const fieldDataValue = useSelector(state => state.docbase.entities.datapoint.values[field_data_id])
-    const fieldDataValue = {}
+    const fieldDataValue = fieldDataValues[field_data_id];
     // const active_field_data_id = useSelector(state => state.docbase.entities.field_data.activeFieldData?.field_data_id)
 
     useEffect(() => {
@@ -96,14 +97,14 @@ const DobCellItem: React.FC<DobCellItemProps> = ({
 
     const onFocus = (e: any) => {
         e.preventDefault()
-        onFocusCell(document_id, datapoint_id, {
-            ...selectedData,
-            value,
-            field_data_id: field_data_id,
-            name: submission_field.name,
-            data_type: submission_field.data_type,
-            is_cell: true,
-        })
+        // onFocusCell(document_id, datapoint_id, {
+        //     ...selectedData,
+        //     value,
+        //     field_data_id: field_data_id,
+        //     name: submission_field.name,
+        //     data_type: submission_field.data_type,
+        //     is_cell: true,
+        // })
     }
 
     const onChange = (date: any, dateString: (string | string[])) => {
@@ -118,7 +119,7 @@ const DobCellItem: React.FC<DobCellItemProps> = ({
                 <Form.Item name={field_data_id} style={{ marginBottom: 0, flex: 1 }}>
                     <DatePicker
                         onChange={onChange}
-                        ref={datapointRef as RefObject<PickerRef>}
+                        ref={datapointRef}
                         onMouseDown={onMouseDown}
                         onFocus={onFocus}
                         onKeyDown={onKeyDown}

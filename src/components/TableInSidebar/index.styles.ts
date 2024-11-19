@@ -163,45 +163,14 @@ export const DeleteButton = styled.div`
   }
 `
 
-export const FooterTable1 = styled.div`
+export const FooterTable = styled.div`
+  flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-height: 50vh;
   background: #ffffff;
-  padding: 16px 24px 8px 24px;
-  box-shadow: 0px -2px 16px 0px #00000012;
-  border-radius: 4px;
-  
-  .hot-table-container {
-    flex-grow: 1;
-    background-color: red;
-    overflow: hidden;
-  }
-
-  .header {
-    display: flex;
-    justify-content: space-between;
-
-    .closeBtn {
-      :hover {
-        cursor: pointer;
-      }
-    }
-  }
-`
-
-export const TableLoadingWrapper = styled.div`
+  flex-direction: column;
+  bottom: 0;
   width: 100%;
-  height: 50vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.8;
-  border: 1px solid #E9EBF0;
-  margin-bottom: 16px;
-  border-radius: 4px;
-  background-color: #FAFBFC;
+  z-index: 151;
 `
 
 export const TableWrapper = styled.div`

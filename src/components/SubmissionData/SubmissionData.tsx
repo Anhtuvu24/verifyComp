@@ -1,15 +1,17 @@
 import React, { useEffect, useState, createRef, useRef, Fragment } from 'react'
-import { useParams } from 'react-router-dom'
-import {
-    useRefsArray,
-    useGetPageImages,
-    useImagesLoaded,
-    useCustomStopwatch,
-} from 'src/library/hooks'
-import { Loading3QuartersOutlined } from '@ant-design/icons';
-import { useDebouncedCallback } from 'use-debounce'
-import { useDispatch, useSelector } from 'react-redux'
-import { validateDatapoint } from 'src/redux/docbase/actions/datapoint'
+import { useDebouncedCallback } from 'use-debounce';
+
+import { Button, Dropdown, Spin, Table, Tooltip } from 'antd';
+import { MdOutlineMoreHoriz } from 'react-icons/md';
+import { DownloadOutlined, EyeOutlined } from '@ant-design/icons';
+
+// Components
+import CustomSpin from '../CustomSpin';
+import TopbarComp from '../TopbarComp';
+import RightSidebarMiddleComp from '../RightSidebarMiddleComp';
+import TableNormal from "../TableNormal";
+
+// Styles
 import {
     DocumentValidationWrapper,
     DocumentValidationContainer,
@@ -18,137 +20,158 @@ import {
     DocumentWrapper,
     ZoomWrapper,
     Document,
-    ColTitle,
-    DeleteButton,
-    FooterTable1,
-    TableWrapper,
-    TableLoadingWrapper
 } from './index.styles';
-import CustomSpin from '../CustomSpin'
-import TopbarComp from './TopbarComp'
-import DocumentImages from './DocumentImages'
-import { setCurrentDocuments, setShowActiveBox } from 'src/redux/docbase/actions/submission'
-import RightSidebarMiddleComp, { SoDoVCBTable, CellItem } from './RightSidebarMiddleComp';
-import { StringParam, useQueryParams } from 'use-query-params'
-import {
-    addFieldRow,
-    deleteFieldRow,
-    getFieldData,
-    setActiveFieldData,
-    updateFieldData
-} from 'src/redux/docbase/actions/field_data';
-import { Button, Dropdown, Spin, Table, Tooltip } from 'antd';
-import { MdDelete, MdOutlineMoreHoriz, MdClose } from 'react-icons/md';
-import { DownloadOutlined, EyeOutlined } from '@ant-design/icons'
-import { downloadFile } from 'src/redux/docbase/actions/file'
-import FileOrigin from './FileOrigin'
-import DobCellItem from 'src/components/DobCellItem';
-import GenderCellItem from 'src/components/GenderCellItem';
 
-const focus = ref => ref && ref.current && ref.current.focus()
+// Utils
+import useRefsArray from "../../utils/useRefsArray";
+import useImagesLoaded from "../../utils/useImagesLoadead";
+import RenderPageImage from "../RenderPageImage";
 
-export default function SubmissionData() {
-    const dispatch = useDispatch()
-    const org_id = useGetOrgId()
-    const [role] = useGetRole()
-    const { time, start, reset } = useCustomStopwatch()
+const focus = (ref: any) => ref && ref.current && ref.current.focus()
 
-    const { folderId: folder_id } = useParams()
-    const [query, setQuery] = useQueryParams({
-        submissionId: StringParam,
-    })
-    const { submissionId: submission_id } = query
-    const submission = useSelector(state => state.docbase.entities.submission.all[submission_id])
-    const { reviewing_by, documents, name, files } = submission || {}
-    const currentUserId = useSelector(state => state.docbase.entities.auth.user.id)
-    const isReadOnly = role === 'viewer' ? true : reviewing_by ? currentUserId !== reviewing_by.user_id : false
+interface SubmissionDataProps {
+    submission?: any;
+    fields?: any[];
+    datapoints?: any;
+    images?: any[];
+    getSubmissionLoading?: boolean;
+    rightLoading?: boolean;
+    tableLoading?: boolean;
+    onClose?: () => void;
+    onAddRow?: (table_id: string) => void;
+    onRemoveRow?: (row_id: string) => void;
+    onValidateSubmission?: () => void;
+    onChangeSubmission?: (type: string) => void;
+    onValidateDatapoint?: ({document_id, datapoint_id}: { document_id: string, datapoint_id: string }) => void;
+    onUpdateField?: ({ field_data_id, datapoint_id, value }: { field_data_id: string, datapoint_id?: any, value: any }) => void;
+}
 
-    const images = useGetPageImages(documents)
-    const imagesLoaded = useImagesLoaded(images)
+const SubmissionData: React.FC<SubmissionDataProps> = ({
+    submission,
+    fields,
+    datapoints,
+    images,
+    getSubmissionLoading,
+    rightLoading,
+    tableLoading,
+    onClose,
+    onAddRow,
+    onRemoveRow,
+    onValidateSubmission,
+    onChangeSubmission,
+    onValidateDatapoint,
+    onUpdateField
+}) => {
 
-    const [focusDatapoints, setFocusDatapoints] = useState([])
-    const [inputRefs] = useRefsArray(focusDatapoints.length)
-    const [submitRef] = useState(createRef())
-    const [submitFocused, setSubmitFocused] = useState(false)
+    const { reviewing_by, documents, name, files } = submission || {};
+    const isReadOnly = false;
 
-    useEffect(() => {
-        if (!submission) return
-        const { documents } = submission
-        dispatch(setCurrentDocuments(documents))
-    }, [submission])
+    const imagesFile = React.useMemo(() => {
+        const _imageFiles = images?.map((item) => item.imageFile)
+        return _imageFiles
+    }, [images]);
+    const imagesLoaded = useImagesLoaded(imagesFile);
 
-    const getSubmissionRequest = useSelector(state => state.docbase.requests.submission.getSubmission)
-    const getSubmissionLoading = useLoading(getSubmissionRequest)
-    const bigLoading = getSubmissionLoading || !imagesLoaded
+    // const [fieldDatas, setFieldDatas] = useState(fields || [])
+    const [datapointDatas, setDatapointDatas] = useState(datapoints)
+    const [activeFieldData, setActiveFieldData] = useState(null)
+    const [showActiveBox, setShowActiveBox] = useState(false)
+    const [focusDatapoints, setFocusDatapoints] = useState<any[]>([]);
+    const [inputRefs] = useRefsArray(focusDatapoints.length);
+    const [submitRef] = useState(createRef<HTMLButtonElement>());
+    const [submitFocused, setSubmitFocused] = useState(false);
 
-    const [tableSelect, setTableSelect] = useState(null)
-    const [prevFocusedDocumentId, setPrevFocusedDocumentId] = useState('')
-    const [prevFocusedId, setPrevFocusedId] = useState('')
-    const [ratio, setRatio] = useState(100)
-    const [getOrigin, moreAction] = useMoreAction({ org_id, folder_id, submission_id, files })
+    const bigLoading = !imagesLoaded || getSubmissionLoading;
 
-    const onValidate = (document_id, datapoint_id) => {
+    const [fieldDataValues, setFieldDataValues] = useState(null)
+    const [tableSelect, setTableSelect] = useState<any>(null);
+
+    const [prevFocusedDocumentId, setPrevFocusedDocumentId] = useState('');
+    const [prevFocusedId, setPrevFocusedId] = useState('');
+    const [ratio, setRatio] = useState(100);
+    // const [getOrigin, moreAction] = useMoreAction({ org_id, folder_id, submission_id, files })
+    // useEffect(() => {
+    //     if (Array.isArray(fields)) {
+    //         setFieldDatas(fields)
+    //     }
+    // }, [fields])
+
+    const onValidate = (document_id: string, datapoint_id: string) => {
         setTimeout(() => {
-            dispatch(validateDatapoint({ org_id, folder_id, submission_id, document_id, datapoint_id, time }))
-            reset()
-        }, 400)
-    }
+            if (onValidateDatapoint) {
+                onValidateDatapoint({ document_id, datapoint_id })
+            }
+        }, 400);
+    };
 
-    const onTab = (document_id, datapoint_id, index) => {
+    const onTab = (document_id: string, datapoint_id: string, index: number) => {
         if (!isReadOnly) {
-            onValidate(document_id, datapoint_id)
+            onValidate(document_id, datapoint_id);
         }
         if (index + 1 === inputRefs.length) {
             if (submitRef.current) {
                 focus(submitRef)
-                setSubmitFocused(true)
-                dispatch(setShowActiveBox(false))
-                dispatch(setActiveFieldData({}))
+                setSubmitFocused(true);
+                setShowActiveBox(false);
+                setActiveFieldData(null);
             } else {
                 focus(inputRefs[0])
             }
         }
         for (let i = index + 1; i < inputRefs.length; i++) {
-            const element = inputRefs[i]
+            const element = inputRefs[i];
             if (element.current) {
                 focus(element)
-                return
+                return;
             }
         }
-    }
+    };
 
-    const onDatapointKeyDown = (e, document_id, datapoint_id, index) => {
+    const onDatapointKeyDown = (e: React.KeyboardEvent, document_id: string, datapoint_id: string, index: number) => {
         if (e.key === 'Tab') {
-            e.preventDefault()
-            onTab(document_id, datapoint_id, index)
+            e.preventDefault();
+            onTab(document_id, datapoint_id, index);
         }
-    }
+    };
 
-    const onSubmitKeyDown = e => {
+    const onSubmitKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Tab') {
-            e.preventDefault()
-            setSubmitFocused(false)
+            e.preventDefault();
+            setSubmitFocused(false);
             focus(inputRefs[0])
         }
-    }
+    };
 
-    const debounced = useDebouncedCallback((field_data_id, value) => {
-        dispatch(updateFieldData({ org_id, folder_id, submission_id, field_data_id, value }))
-    }, 400)
+    const debounced = useDebouncedCallback((field_data_id: string, value: any) => {
+        if (onUpdateField) {
+            onUpdateField({ field_data_id, value });
+        }
+    }, 400);
 
-    const onFocusField = (documentId, datapointId) => {
-        setPrevFocusedDocumentId(documentId)
-        setPrevFocusedId(datapointId)
-        dispatch(setShowActiveBox(true))
-        start()
-    }
+    const onFocusField = (documentId: string, datapointId: string) => {
+        setPrevFocusedDocumentId(documentId);
+        setPrevFocusedId(datapointId);
+        setShowActiveBox(true);
+    };
 
-    const onOpenTable = (data) => {
-        setTableSelect(data)
-    }
+    const onOpenTable = (data: any) => {
+        setTableSelect(data);
+    };
 
     const onCloseTable = () => {
-        setTableSelect(null)
+        setTableSelect(null);
+    };
+
+    const onChangeFieldDataValue = (datapointId: string, value: any) => {
+        setFieldDataValues((prev: any) => {
+            return {
+                ...prev,
+                [datapointId]: {
+                    ...prev[datapointId],
+                    value: value
+                }
+            }
+        })
     }
 
     return (
@@ -156,13 +179,18 @@ export default function SubmissionData() {
             <DocumentValidationWrapper>
                 <TopbarComp
                     isReadOnly={isReadOnly}
+                    // submission={submission}
+                    // submissions={submissions}
                     name={name}
                     ratio={ratio}
                     setRatio={setRatio}
                     imagesLoaded={imagesLoaded}
-                    moreAction={moreAction}
+                    // moreAction={moreAction}
                     submitRef={submitRef}
                     submitFocused={submitFocused}
+                    onClose={onClose}
+                    onValidateSubmission={onValidateSubmission}
+                    onChangeSubmission={onChangeSubmission}
                     onSubmitKeyDown={onSubmitKeyDown}
                 />
                 <DocumentValidationContainer>
@@ -174,31 +202,38 @@ export default function SubmissionData() {
                                         <CustomSpin size={48} />
                                     ) : (
                                         <Fragment>
-                                            {getOrigin ? (
-                                                <Fragment>
-                                                    {files?.map(file => (
-                                                        <FileOrigin key={file.id} id={file.id} />
-                                                    ))}
-                                                </Fragment>
-                                            ) : (
-                                                <Fragment>
-                                                    {documents?.map((document, index) => {
-                                                        return (
-                                                            <DocumentImages
-                                                                key={document.id}
-                                                                document={document}
-                                                                tableSelect={tableSelect}
-                                                                onTab={onTab}
-                                                                onDatapointKeyDown={onDatapointKeyDown}
-                                                                isReadOnly={isReadOnly}
-                                                                focusDatapoints={focusDatapoints}
-                                                                debounced={debounced}
-                                                                ratio={ratio}
-                                                            />
-                                                        )
-                                                    })}
-                                                </Fragment>
-                                            )}
+                                            {/*{getOrigin ? (*/}
+                                            {/*    <Fragment>*/}
+                                            {/*        {files?.map(file => (*/}
+                                            {/*            <FileOrigin key={file.id} id={file.id} />*/}
+                                            {/*        ))}*/}
+                                            {/*    </Fragment>*/}
+                                            {/*) : (*/}
+                                            {/*    <Fragment>*/}
+                                                {images?.map((image, index) => {
+                                                    return (
+                                                        <RenderPageImage
+                                                            key={image.id}
+                                                            tableSelect={tableSelect}
+                                                            pageId={image.id}
+                                                            image={image}
+                                                            activeFieldData={activeFieldData}
+                                                            fieldDataValues={fieldDataValues}
+                                                            onTab={onTab}
+                                                            onChangeFieldDataValue={onChangeFieldDataValue}
+                                                            onDatapointKeyDown={onDatapointKeyDown}
+                                                            setShowActiveBox={setShowActiveBox}
+                                                            showActiveBox={showActiveBox}
+                                                            isReadOnly={isReadOnly}
+                                                            focusDatapoints={focusDatapoints}
+                                                            debounced={debounced}
+                                                            ratio={ratio}
+                                                            isVerify={false}
+                                                        />
+                                                    )
+                                                })}
+                                                {/*</Fragment>*/}
+                                            {/*// )}*/}
                                         </Fragment>
                                     )}
                                 </Document>
@@ -208,19 +243,32 @@ export default function SubmissionData() {
                     {!tableSelect ? (
                         <RightSidebar>
                             {bigLoading ? (
-                                <CustomSpin />
+                                <CustomSpin size={32} />
                             ) : (
                                 <RightSidebarMiddleComp
+                                    fields={fields}
+                                    datapoints={datapointDatas}
+                                    submission={submission}
+                                    activeFieldData={activeFieldData}
                                     focusDatapoints={focusDatapoints}
+                                    fieldDataValues={fieldDataValues}
+                                    setDatapoints={setDatapointDatas}
+                                    setShowActiveBox={setShowActiveBox}
+                                    setActiveFieldData={setActiveFieldData}
+                                    setFieldDataValues={setFieldDataValues}
                                     setFocusDatapoints={setFocusDatapoints}
+                                    // setFieldDatas={setFieldDatas}
                                     inputRefs={inputRefs}
                                     onDatapointKeyDown={onDatapointKeyDown}
                                     prevFocusedId={prevFocusedId}
                                     onValidate={onValidate}
                                     onOpenTable={onOpenTable}
+                                    onUpdateField={onUpdateField}
+                                    onChangeFieldDataValue={onChangeFieldDataValue}
                                     prevFocusedDocumentId={prevFocusedDocumentId}
                                     debounced={debounced}
                                     isReadOnly={isReadOnly}
+                                    rightLoading={rightLoading}
                                     onFocusField={onFocusField}
                                 />
                             )}
@@ -229,14 +277,22 @@ export default function SubmissionData() {
                 </DocumentValidationContainer>
                 {tableSelect ? (
                     <TableNormal
+                        fields={fields}
                         isReadOnly={isReadOnly}
+                        tableLoading={tableLoading}
+                        activeFieldData={activeFieldData}
                         focusDatapoints={focusDatapoints}
                         debounced={debounced}
                         onValidate={onValidate}
+                        onAddRow={onAddRow}
+                        onRemoveRow={onRemoveRow}
                         inputRefs={inputRefs}
                         onDatapointKeyDown={onDatapointKeyDown}
                         tableSelect={tableSelect}
                         onCloseTable={onCloseTable}
+                        setShowActiveBox={setShowActiveBox}
+                        setActiveFieldData={setActiveFieldData}
+                        onChangeFieldDataValue={onChangeFieldDataValue}
                     />
                 ) : null}
             </DocumentValidationWrapper>
@@ -244,226 +300,4 @@ export default function SubmissionData() {
     )
 }
 
-function TableNormal({
-     isReadOnly,
-     focusDatapoints,
-     debounced,
-     onValidate,
-     inputRefs,
-     onDatapointKeyDown,
-     tableSelect,
-     onCloseTable
-}) {
-    const dispatch = useDispatch()
-    const org_id = useGetOrgId()
-    const { folderId: folder_id } = useParams()
-    const [query, setQuery] = useQueryParams({
-        submissionId: StringParam,
-    })
-    const { submissionId: submission_id } = query
-    const {
-        tableId: field_data_id,
-        name,
-        isSoDoVCB,
-        ma_tinh,
-    } = tableSelect
-    const tableDatapoint = useSelector(state => state.docbase.entities.field_data.all[field_data_id])
-    const dataSource = tableDatapoint?.field_data_set || []
-    const getFieldDataRequest = useSelector(state => state.docbase.requests.field_data.getFieldData)
-    const addFieldRowRequest = useSelector(state => state.docbase.requests.field_data.addFieldRow)
-    const deleteFieldRowRequest = useSelector(state => state.docbase.requests.field_data.deleteFieldRow)
-    const tableLoading = useLoading([getFieldDataRequest, addFieldRowRequest, deleteFieldRowRequest])
-
-    const [isLoading, setIsLoading] = useState(true)
-    const [prevFocusedDocumentId, setPrevFocusedDocumentId] = useState('')
-    const [prevFocusedId, setPrevFocusedId] = useState('')
-    // const [dataSource, setDataSource] = useState([])
-    useEffect(() => {
-        if (!tableDatapoint) return
-        // const { field_data_set } = tableDatapoint
-        // setDataSource(field_data_set)
-        if (isLoading) {
-            setIsLoading(false)
-        }
-    }, [tableDatapoint])
-
-    const onAddRow = () => {
-        dispatch(addFieldRow({ org_id, folder_id, submission_id, parent: field_data_id }))
-    }
-
-    const onDeleteRow = id => {
-        dispatch(deleteFieldRow({ org_id, folder_id, submission_id, field_data_id: id }))
-    }
-
-    const onFocusCell = (documentId, datapointId, activeDatapoint) => {
-        dispatch(setActiveFieldData(activeDatapoint))
-        setPrevFocusedDocumentId(documentId)
-        setPrevFocusedId(datapointId)
-        dispatch(setShowActiveBox(true))
-    }
-
-    const onMouseDownCell = datapointId => {
-        if (!isReadOnly && prevFocusedId && prevFocusedId !== datapointId) {
-            onValidate(prevFocusedDocumentId, prevFocusedId)
-        }
-    }
-
-    const renderCell = (data, index, dataKey) => {
-        if (dataKey === 'dob') {
-            return (
-                <DobCellItem
-                    datapoint={data[index]}
-                    inputCellRefs={inputRefs}
-                    isReadOnly={isReadOnly}
-                    flatData={focusDatapoints}
-                    onFocusCell={onFocusCell}
-                    onKeyDownCell={onDatapointKeyDown}
-                    onMouseDownCell={onMouseDownCell}
-                    debounced={debounced}
-                />
-            )
-        }
-        if (dataKey === 'gender') {
-            return (
-                <GenderCellItem
-                    datapoint={data[index]}
-                    inputCellRefs={inputRefs}
-                    isReadOnly={isReadOnly}
-                    flatData={focusDatapoints}
-                    onFocusCell={onFocusCell}
-                    onKeyDownCell={onDatapointKeyDown}
-                    onMouseDownCell={onMouseDownCell}
-                    debounced={debounced}
-                />
-            )
-        }
-        return (
-            <CellItem
-                datapoint={data[index]}
-                inputCellRefs={inputRefs}
-                isReadOnly={isReadOnly}
-                flatData={focusDatapoints}
-                onFocusCell={onFocusCell}
-                onKeyDownCell={onDatapointKeyDown}
-                onMouseDownCell={onMouseDownCell}
-                debounced={debounced}
-            />
-        )
-    }
-
-    const cols = dataSource.length
-        ? dataSource[0].field_data_set.map((col, index) => {
-            const { id, submission_field } = col
-            const { name, required, label } = submission_field
-            return {
-                title: <ColTitle required={required}>{name}</ColTitle>,
-                key: id,
-                dataIndex: 'field_data_set',
-                render: data => renderCell(data, index, label),
-            }
-        })
-        : []
-
-    const columns = isSoDoVCB
-        ? [...cols]
-        : [
-            ...cols,
-            {
-                title: '',
-                key: 'delete',
-                render: (_, record) => {
-                    if (isReadOnly) {
-                        return null
-                    }
-                    return (
-                        <Tooltip title='Xóa hàng'>
-                            <DeleteButton onClick={() => onDeleteRow(record.id)}>
-                                <MdDelete style={{ fontSize: 16, verticalAlign: 'middle' }} />
-                            </DeleteButton>
-                        </Tooltip>
-                    )
-                },
-                width: 48,
-                fixed: 'right',
-            },
-        ]
-
-    const reloadTableData = () => {
-        dispatch(getFieldData({ org_id, folder_id, submission_id, field_data_id, force: true, type: 'table' }))
-    }
-
-    return (
-        <FooterTable1>
-            <div className={'header'}>
-                <b>{name}</b>
-                <div className={'closeBtn'} onClick={() => onCloseTable()}><MdClose color={'#637381'} fontSize={24} /></div>
-            </div>
-            {isLoading ? (
-                <TableLoadingWrapper>
-                    <Loading3QuartersOutlined spin={true} style={{ fontSize: 40, color: '#1847A3' }} />
-                </TableLoadingWrapper>
-            ) : (
-                <>
-                    {isSoDoVCB ? (
-                        <SoDoVCBTable dataSource={dataSource} columns={columns} reloadTableData={reloadTableData} ma_tinh={ma_tinh} />
-                    ) : (
-                        <TableWrapper>
-                            <Table
-                                dataSource={dataSource}
-                                columns={columns}
-                                pagination={false}
-                                rowKey={record => record.id}
-                                size='small'
-                                scroll={{ y: '100%', x: 'max-content' }}
-                                loading={tableLoading}
-                                bordered
-                            />
-                        </TableWrapper>
-                    )}
-                </>
-            )}
-            {!isReadOnly && !isSoDoVCB && (
-                <div >
-                    <Button type='dashed' size='small' style={{ height: 26, fontSize: 13 }} onClick={onAddRow}>
-                        + Thêm hàng
-                    </Button>
-                </div>
-            )}
-        </FooterTable1>
-    )
-}
-
-export function useMoreAction({ org_id, folder_id, submission_id, files }) {
-    const [getOrigin, setGetOrigin] = useState(false)
-    const dispatch = useDispatch()
-
-    const onClick = ({ key }) => {
-        if (key === '1') {
-            setGetOrigin(state => !state)
-        }
-        if (key === '2') {
-            files.forEach(file => {
-                dispatch(downloadFile({ org_id, folder_id, submission_id, file }))
-            })
-        }
-    }
-
-    const items = [
-        { label: `Xem file ${getOrigin ? 'đã xử lý' : 'gốc'}`, key: '1', icon: <EyeOutlined /> },
-        { label: 'Tải file gốc', key: '2', icon: <DownloadOutlined /> },
-    ]
-
-    const button = (
-        <>
-            {files?.length ? (
-                <Dropdown menu={{ items, onClick }} placement='bottomRight' trigger={['click']}>
-                    <Button type='text'>
-                        <MdOutlineMoreHoriz style={{ fontSize: 20 }} />
-                    </Button>
-                </Dropdown>
-            ) : null}
-        </>
-    )
-
-    return [getOrigin, button]
-}
+export default React.memo(SubmissionData)

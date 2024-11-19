@@ -2,7 +2,6 @@ import { Button } from 'antd'
 // @ts-ignore
 import { Element } from 'react-scroll'
 import styled from 'styled-components'
-import { HotTable } from '@handsontable/react';
 
 export const DocumentValidationWrapper = styled.div`
   height: 100%;
@@ -61,7 +60,11 @@ export const LeftSidebar = styled.div`
   }
 `
 
-export const Middle = styled.div`
+interface MiddleProps {
+    isTableSelect?: boolean;
+}
+
+export const Middle = styled.div<MiddleProps>`
   //flex: 2;
   display: flex;
   flex-direction: column;
@@ -144,16 +147,6 @@ export const SectionTitle = styled.div`
   /* margin-bottom: 16px; */
 `
 
-
-
-export const Confidence = styled.span`
-  color: ${({ score }) => (score > 0.9 ? '#00B497' : '#E9A700')};
-  margin-left: 8px;
-  opacity: ${({ score }) => (score ? 1 : 0)};
-  font-size: 10px;
-  width: 27px;
-`
-
 export const CellDatapoint = styled.div`
   display: flex;
   align-items: center;
@@ -191,9 +184,9 @@ export const CellDatapoint = styled.div`
   }
 
   .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-    font-size: ${props => (props.isSoHoTichA3 ? '13px' : '12px')};
+    font-size: 12px;
     border-radius: 0;
-    height: ${props => (props.isSoHoTichA3 ? '30.42px' : '28.84px')};
+    height: 28.84px;
     outline: none;
     box-shadow: none !important;
 
@@ -220,38 +213,6 @@ export const CellDatapoint = styled.div`
   }
 `
 
-export const Title = styled.div`
-  width: 220px;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-
-  &:before {
-    margin-right: 2px;
-    color: ${props => (props.required ? '#ff4d4f' : 'transparent')};
-    display: ${props => (props.required ? 'initial' : 'none')};
-    content: '*';
-  }
-`
-
-export const ColTitle = styled.div`
-  &:before {
-    margin-right: 2px;
-    color: ${props => (props.required ? '#ff4d4f' : 'transparent')};
-    display: ${props => (props.required ? 'inline-block' : 'none')};
-    content: '*';
-  }
-`
-
-export const RightSidebarFooter = styled.div`
-  position: relative;
-  padding: 16px 12px;
-  display: flex;
-  justify-content: space-between;
-`
-
 export const DocumentWrapper = styled.div`
   flex: 1;
   height: auto;
@@ -259,283 +220,6 @@ export const DocumentWrapper = styled.div`
   flex-direction: column;
   position: relative;
   overflow-y: hidden;
-`
-
-export const FooterTable1 = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-height: 50vh;
-  background: #ffffff;
-  padding: 16px 24px 8px 24px;
-  box-shadow: 0px -2px 16px 0px #00000012;
-  border-radius: 4px;
-  
-  .hot-table-container {
-    flex-grow: 1;
-    background-color: red;
-    overflow: hidden;
-  }
-
-  .header {
-    display: flex;
-    justify-content: space-between;
-
-    .closeBtn {
-      :hover {
-        cursor: pointer;
-      }
-    }
-  }
-`
-
-export const FooterTable = styled.div`
-  flex: 0 0 auto;
-  display: flex;
-  background: #ffffff;
-  flex-direction: column;
-  bottom: 0;
-  width: 100%;
-  z-index: 151;
-  /* box-shadow: 0px -2px 8px rgba(0, 0, 0, 0.15); */
-  /* justify-content: space-between; */
-  /* position: fixed; */
-  /* width: calc(100% - 650px); */
-  /* width: 50%; */
-
-  /* height: 350px; */
-`
-
-// export const FooterTable = styled.div`
-//   flex: 0 0 auto;
-//   display: flex;
-//   background: #ffffff;
-//   box-shadow: 0px -2px 8px rgba(0, 0, 0, 0.15);
-//   flex-direction: column;
-//   /* justify-content: space-between; */
-//   position: fixed;
-//   bottom: 0;
-//   /* width: calc(100% - 650px); */
-//   width: 50%;
-//   z-index: 151;
-
-//   /* height: 350px; */
-// `;
-
-export const FooterTableBCTC = styled.div`
-  flex: 0 0 auto;
-  display: flex;
-  background: #ffffff;
-  /* box-shadow: 0px -2px 8px rgba(0, 0, 0, 0.15); */
-  flex-direction: column;
-  /* justify-content: space-between; */
-  /* position: fixed; */
-  /* bottom: 0; */
-  /* width: calc(100% - 650px); */
-  /* width: 50%; */
-  z-index: 151;
-
-  /* height: 350px; */
-`
-
-export const TableTitle = styled.div`
-  padding: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`
-
-export const HotTableCustom = styled(HotTable)`
-  .ht_clone_top, .ht_master {
-    .wtHolder {
-      .wtHider {
-        width: 100% !important;
-        .wtSpreader {
-          width: 100% !important;
-          .htCore {
-            width: 100% !important;
-          }
-        }
-      }
-    }
-  }
-  .ht_master {
-    height: 100% !important;
-    max-height: 100% !important;
-    .wtHolder {
-      height: 100% !important;
-      max-height: 100% !important;
-    }
-  }
-`
-
-export const TableLoadingWrapper = styled.div`
-  width: 100%;
-  height: 50vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.8;
-  border: 1px solid #E9EBF0;
-  margin-bottom: 16px;
-  border-radius: 4px;
-  background-color: #FAFBFC;
-`
-
-export const TableWrapper = styled.div`
-  padding: 16px 0;
-  flex: 1;
-  overflow: auto;
-  margin-bottom: 16px;
-
-  .ant-table-wrapper {
-    height: 100%;
-
-    .ant-spin-nested-loading {
-      height: 100%;
-
-      .ant-spin-container {
-        height: 100%;
-        display: flex;
-        flex-flow: column nowrap;
-
-        .ant-table {
-          flex: auto;
-          overflow: hidden;
-
-          .ant-table-container {
-            height: 100%;
-            display: flex;
-            flex-flow: column nowrap;
-
-            .ant-table-header {
-              flex: none;
-            }
-
-            .ant-table-body {
-              flex: auto;
-              overflow: scroll;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .ant-table-thead > tr > th {
-    font-size: 13px;
-  }
-
-  .ant-table-body {
-    overflow-y: auto !important;
-    /* padding-bottom: 4px; */
-
-    &::-webkit-scrollbar {
-      height: 6px;
-      width: 6px;
-      background: transparent;
-    }
-    &::-webkit-scrollbar-corner {
-      background-color: transparent;
-    }
-    &::-webkit-scrollbar-thumb {
-      background-color: #69696999;
-      border-radius: 50px;
-    }
-  }
-  .ant-table-tbody > tr:hover:not(.ant-table-expanded-row) > td {
-    background: #fff !important;
-  }
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-body > table > tbody > tr > td {
-    padding: 0;
-    border: none;
-
-    &:last-child {
-      border-right: 1px solid #f0f0f0;
-    }
-  }
-
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-body > table > tbody > tr:last-child > td {
-    border-bottom: 1px solid #f0f0f0;
-  }
-`
-
-export const TableWrapperBCTC = styled.div`
-  /* padding: 0 16px; */
-  flex: 1;
-  overflow: auto;
-  margin-bottom: 16px;
-
-  .ant-table-wrapper {
-    height: 100%;
-
-    .ant-spin-nested-loading {
-      height: 100%;
-
-      .ant-spin-container {
-        height: 100%;
-        display: flex;
-        flex-flow: column nowrap;
-
-        .ant-table {
-          flex: auto;
-          overflow: hidden;
-
-          .ant-table-container {
-            height: 100%;
-            display: flex;
-            flex-flow: column nowrap;
-
-            .ant-table-header {
-              flex: none;
-            }
-
-            .ant-table-body {
-              flex: auto;
-              overflow: scroll;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .ant-table-thead > tr > th {
-    font-size: 13px;
-  }
-
-  .ant-table-body {
-    overflow-y: auto !important;
-    /* padding-bottom: 4px; */
-
-    &::-webkit-scrollbar {
-      height: 6px;
-      width: 6px;
-      background: transparent;
-    }
-    &::-webkit-scrollbar-corner {
-      background-color: transparent;
-    }
-    &::-webkit-scrollbar-thumb {
-      background-color: #69696999;
-      border-radius: 50px;
-    }
-  }
-  .ant-table-tbody > tr:hover:not(.ant-table-expanded-row) > td {
-    background: #fff !important;
-  }
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-body > table > tbody > tr > td {
-    padding: 0;
-    border: none;
-
-    &:last-child {
-      border-right: 1px solid #f0f0f0;
-    }
-  }
-
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-body > table > tbody > tr:last-child > td {
-    border-bottom: 1px solid #f0f0f0;
-  }
 `
 
 export const TableItemWrapper = styled.div`
@@ -562,7 +246,7 @@ export const TableItemWrapper = styled.div`
     gap: 8px;
     color: #212B36;
     font-size: 12px;
-    :hover {
+    &:hover {
       cursor: pointer;
       background-color: #D2D2D280;
     }
@@ -584,18 +268,6 @@ export const ZoomContainer = styled.div`
   display: flex;
   align-items: center;
   box-shadow: 0px 4px 8px rgb(0 0 0 / 4%);
-`
-
-export const ZoomButton = styled.div`
-  padding: 9px 13px;
-  cursor: ${props => (props.disabled ? 'default' : 'pointer')};
-
-  transition: all 0.3s;
-  color: ${props => (props.disabled ? 'rgba(0,0,0,0.34)' : '#000')};
-
-  &:hover {
-    color: ${props => (props.disabled ? 'rgba(0,0,0,0.34)' : '#EC1C2A')};
-  }
 `
 
 export const ZoomWrapper = styled.div`

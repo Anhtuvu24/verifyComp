@@ -12,6 +12,7 @@ import useGetIndex from "../../utils/useGetIndex";
 
 interface CellItemProps {
     datapoint: any;
+    fieldDataValues: any;
     inputCellRefs: any;
     isReadOnly: boolean;
     flatData: any;
@@ -24,6 +25,7 @@ interface CellItemProps {
 
 const CellItem: React.FC<CellItemProps> = ({
     datapoint: field_data,
+    fieldDataValues,
     inputCellRefs,
     isReadOnly,
     flatData,
@@ -33,7 +35,6 @@ const CellItem: React.FC<CellItemProps> = ({
     debounced,
     onChangeFieldDataValue,
 }) => {
-    // const dispatch = useDispatch();
     const [form] = Form.useForm();
 
     const { id: field_data_id, submission_field, value, data: selected_id, data_source } = field_data;
@@ -45,7 +46,7 @@ const CellItem: React.FC<CellItemProps> = ({
     const [index] = useGetIndex(flatData, field_data_id, 'not_validated');
     const datapointRef = inputCellRefs[index];
 
-    const fieldDataValue = value;
+    const fieldDataValue = fieldDataValues[field_data_id];
 
     useEffect(() => {
         form.setFieldsValue({
