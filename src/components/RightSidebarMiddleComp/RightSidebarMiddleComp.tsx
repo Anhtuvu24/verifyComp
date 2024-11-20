@@ -17,7 +17,6 @@ import TableData from "../TableInSidebar";
 // Styles
 import { SectionTitle, TableItemWrapper, RightSidebarMiddle } from "../SubmissionData/index.styles";
 import {arrayToObject} from "../../utils/helper";
-import {isArray} from "util";
 
 const { Panel } = Collapse
 
