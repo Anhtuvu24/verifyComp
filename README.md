@@ -97,7 +97,7 @@
         );
       };
       ```
-   - Xử lý scroll box chứa images và scroll tới vị trí field nm trong ảnh
+   - Xử lý scroll box chứa images và scroll tới vị trí field nằm trong ảnh
       ```javascript
       const scrollToDocumentContainer = (datapointId: string) => {
         let goToContainer = new Promise((resolve, reject) => {
