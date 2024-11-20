@@ -128,10 +128,13 @@
    - Xử lý đưa view của box vào khoảng nhìn thấy với trường hợp ảnh lớn hơn khoảng view
       ```javascript
       useEffect(() => {
+        // page: page chứa box của field đang focus  
+        // pageId: id của box chứa image
+        // activeData: field đang được focus
         if (pageId === page && loaded && imageRef.current && activeData.box?.length) {
             imageRef.current.scrollIntoView({ behavior: 'smooth' });
 
-            const fieldElement = document.querySelector(`#active-box-${activeData.id || activeData.field_data_id}`);
+            const fieldElement = document.querySelector(`#active-box-${activeData.id}`);
             if (fieldElement) {
                 const containerRect = imageRef.current.getBoundingClientRect();
                 const fieldRect = fieldElement.getBoundingClientRect();
