@@ -31,13 +31,14 @@
     };
    ```
    > **NOTE**:
-   > Mỗi khi thay đổi tỷ lệ phóng to/thu nhỏ cần tạo lại ảnh để phâần tính toán tỷ lệ kích thước gốc
+   > Mỗi khi thay đổi tỷ lệ phóng to/thu nhỏ cần tạo lại ảnh để phần tính toán tỷ lệ kích thước gốc
      và kích thước hiển thị được đúng
    > ```javascript
    > const urlImage = useMemo(() => {
    >     if (image && imageFile) {
    >         return URL.createObjectURL(imageFile);
    >     }
+   > // Mỗi khi image hoặc phóng to/thu nhỏ (ratio) thay đổi cần tạo lại ảnh
    > }, [image, tableSelect, ratio]);
    > ```
 2. **Render box**
